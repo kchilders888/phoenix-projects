@@ -1,0 +1,50 @@
+#R Code used for Principal Components Analysis
+
+#Project: "Exploring the Use of Survey Questions and Responses as Proxies for the Individual Attributes of School Principals"
+
+#read tables and create data matrix
+survey.teach <- read.csv("tch21.csv", header=TRUE, sep=",")
+survey <- na.omit(survey.teach)
+Tch <- data.matrix(survey)[,-1:-6]
+Tch.names <- survey[,2]
+summary(survey)
+labels<- read.csv("Qlabels.csv", header=TRUE, sep=",")
+qlabels <- labels[1,]
+
+# Correlation Matrix
+Tch.cor <- cor(Tch)
+(round(cbind(Tch.cor),d=2))
+
+# Principal Components Analysis
+Tch.pca <- princomp(Tch, cor=TRUE)
+Tch.pca.loadings <- summary(Tch.pca, loadings=TRUE)
+
+#Plot eigenvalues and scree for PCA 
+plot(Tch.pca)
+plot(Tch.pca$sdev^2, type="b", xlab="component number", ylab="eigenvalue")
+round(cbind("Variance"=Tch.pca$sdev^2, "% Explained"=100*Tch.pca$sdev^2/sum(Tch.pca$sdev^2),"Cumulative %"=100*cumsum(Tch.pca$sdev^2)/sum(Tch.pca$sdev^2)),d=2)
+
+#Plot PCA
+plot(loadings[,1], loadings[,2], xlab="Component 1", ylab="Component 2", main="PCA, Loadings")
+text(loadings[,1], loadings[,2], labels=row.names(loadings), pos=2, cex=1)
+
+#Plot PCA a* values
+a.star <- Tch.pca$loadings*rep(Tch.pca$sdev, each=length(Tch.pca$sdev))
+print(round(a.star, d=2), cutoff=0)
+plot(a.star[,1], a.star[,2], axes=FALSE, xlab="", ylab="", main="PCA a* Loadings",xlim=c(-1,-.8), ylim=c(-.5,.5), pch=21)
+mtext(expression(a[i1]^"*"), 2, las=1)
+mtext(expression(a[i2]^"*"),3,las=1)
+axis(1, at=c(-1,-.8), pos=0)
+axis(2, at=c(-.5,.5), pos=-.9)
+text(a.star[,1], a.star[,2], labels=colnames(qlabels), pos=2,  cex=.75)
+text(a.star[,1], a.star[,2], labels=colnames(Tch), pos=2,  cex=.75)
+
+#Plot Individual Grouping: Relationships
+plot(a.star[,1], a.star[,2], axes=TRUE, xlab="", ylab="", main="Grouping: Relationships",xlim=c(-.95,-.86), ylim=c(.25,.5), pch=21)
+axis(2, at=c(-.6,.6), pos=-.9)
+text(a.star[,1], a.star[,2], labels=colnames(Tch), pos=2,  cex=.75)
+#(code follows format for all other groupings)
+
+# component scores
+Tch.pca.scores <- Tch.pca$loadings/rep(Tch.pca$sdev,each=length(Tch.pca$sdev))
+print(round(Tch.pca.scores, d=2), cutoff=0)
